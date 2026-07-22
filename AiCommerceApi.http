@@ -1,0 +1,6 @@
+@AiCommerceApi_HostAddress = http://localhost:5041
+
+GET {{AiCommerceApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
