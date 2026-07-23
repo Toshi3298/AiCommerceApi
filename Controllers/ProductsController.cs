@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AiCommerceApi.Features.Products.Queries.GetProducts;
 namespace AiCommerceApi.Controllers;
+using AiCommerceApi.Features.Products.Queries.GetProductById;
 
 [ApiController]
 [Route("api/products")]
@@ -65,4 +66,23 @@ public class ProductsController : ControllerBase
 
         return Ok(products);
     }
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> GetProductById(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        var product = await _mediator.Send(
+            new GetProductByIdQuery(id),
+            cancellationToken);
+
+        if (product is null)
+        {
+            return NotFound(new
+            {
+                message = "Ürün bulunamadı."
+            });
+        }
+
+        return Ok(product);
+}
 }
