@@ -4,6 +4,8 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using AiCommerceApi.Features.Auth.Commands.Login;
 namespace AiCommerceApi.Controllers;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 [ApiController]
 [Route("api/auth")]
@@ -72,4 +74,23 @@ public async Task<IActionResult> Login(
         expiresAt = result.ExpiresAt
     });
 }
+
+[Authorize]
+[HttpGet("me")]
+public IActionResult GetMe()
+{
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var fullName = User.FindFirstValue(ClaimTypes.Name);
+    var email = User.FindFirstValue(ClaimTypes.Email);
+    var role = User.FindFirstValue(ClaimTypes.Role);
+
+    return Ok(new
+    {
+        userId,
+        fullName,
+        email,
+        role
+    });
+}
+
 }
