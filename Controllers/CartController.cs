@@ -10,8 +10,10 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AiCommerceApi.Features.Carts.Queries.GetCart;
-
+using AiCommerceApi.Features.Carts.Commands.UpdateCartItem;
 namespace AiCommerceApi.Controllers;
+using AiCommerceApi.Features.Carts.Commands.RemoveCartItem;
+using AiCommerceApi.Features.Carts.Commands.ClearCart;
 
 [ApiController]
 [Route("api/cart")]
@@ -111,4 +113,139 @@ public class CartController : ControllerBase
 
         return Ok(response);
     }
+    [HttpPut("items/{cartItemId:int}")]
+public async Task<IActionResult> UpdateCartItem(
+    int cartItemId,
+    UpdateCartItemRequestDto request,
+    CancellationToken cancellationToken)
+{
+    string? userIdValue =
+        User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    if (!int.TryParse(userIdValue, out int userId))
+    {
+        var unauthorizedResponse =
+            ApiResponse<object?>.Fail(
+                "Geçersiz kullanıcı bilgisi.");
+
+        return Unauthorized(unauthorizedResponse);
+    }
+
+    var command = new UpdateCartItemCommand(
+        userId,
+        cartItemId,
+        request.Quantity);
+
+    var result = await _mediator.Send(
+        command,
+        cancellationToken);
+
+    if (result.NotFound)
+    {
+        var notFoundResponse =
+            ApiResponse<object?>.Fail(
+                result.Error ?? "Sepet ürünü bulunamadı.");
+
+        return NotFound(notFoundResponse);
+    }
+
+    if (!result.Success)
+    {
+        var errorResponse =
+            ApiResponse<object?>.Fail(
+                result.Error ?? "Miktar güncellenemedi.");
+
+        return BadRequest(errorResponse);
+    }
+
+    var response =
+        ApiResponse<object?>.Ok(
+            new
+            {
+                cartItemId,
+                quantity = result.Quantity,
+                lineTotal = result.LineTotal
+            },
+            "Sepetteki ürün miktarı güncellendi.");
+
+    return Ok(response);
+}
+[HttpDelete("items/{cartItemId:int}")]
+public async Task<IActionResult> RemoveCartItem(
+    int cartItemId,
+    CancellationToken cancellationToken)
+{
+    string? userIdValue =
+        User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    if (!int.TryParse(userIdValue, out int userId))
+    {
+        var unauthorizedResponse =
+            ApiResponse<object?>.Fail(
+                "Geçersiz kullanıcı bilgisi.");
+
+        return Unauthorized(unauthorizedResponse);
+    }
+
+    var result = await _mediator.Send(
+        new RemoveCartItemCommand(
+            userId,
+            cartItemId),
+        cancellationToken);
+
+    if (result.NotFound)
+    {
+        var notFoundResponse =
+            ApiResponse<object?>.Fail(
+                result.Error ?? "Sepet ürünü bulunamadı.");
+
+        return NotFound(notFoundResponse);
+    }
+
+    var response =
+        ApiResponse<object?>.Ok(
+            null,
+            "Ürün sepetten kaldırıldı.");
+
+    return Ok(response);
+}
+[HttpDelete]
+public async Task<IActionResult> ClearCart(
+    CancellationToken cancellationToken)
+{
+    string? userIdValue =
+        User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    if (!int.TryParse(userIdValue, out int userId))
+    {
+        var unauthorizedResponse =
+            ApiResponse<object?>.Fail(
+                "Geçersiz kullanıcı bilgisi.");
+
+        return Unauthorized(unauthorizedResponse);
+    }
+
+    var result = await _mediator.Send(
+        new ClearCartCommand(userId),
+        cancellationToken);
+
+    if (!result.Success)
+    {
+        var errorResponse =
+            ApiResponse<object?>.Fail(
+                result.Error ?? "Sepet temizlenemedi.");
+
+        return BadRequest(errorResponse);
+    }
+
+    var response =
+        ApiResponse<object?>.Ok(
+            new
+            {
+                removedItemCount = result.RemovedItemCount
+            },
+            "Sepet başarıyla temizlendi.");
+
+    return Ok(response);
+}
 }
