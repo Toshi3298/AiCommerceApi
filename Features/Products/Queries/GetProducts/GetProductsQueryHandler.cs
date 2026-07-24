@@ -26,6 +26,7 @@ public class GetProductsQueryHandler
     {
         return await _context.Products
             .AsNoTracking()
+            .Where(product =>product.IsActive)
             .OrderBy(product => product.Name)
             .Select(product => new ProductDto
             {

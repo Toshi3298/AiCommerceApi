@@ -26,7 +26,7 @@ public class GetProductByIdQueryHandler
     {
         return await _context.Products
             .AsNoTracking()
-            .Where(product => product.Id == request.Id)
+            .Where(product => product.Id == request.Id&& product.IsActive)
             .Select(product => new ProductDto
             {
                 Id = product.Id,

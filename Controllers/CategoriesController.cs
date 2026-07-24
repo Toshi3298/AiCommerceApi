@@ -1,13 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using AiCommerceApi.Dtos.Categories;
 using AiCommerceApi.Features.Categories.Commands.CreateCategory;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AiCommerceApi.Features.Categories.Queries.GetCategories;
+using AiCommerceApi.Common.Responses;
 
 
 namespace AiCommerceApi.Controllers;
@@ -39,19 +36,25 @@ public class CategoriesController : ControllerBase
 
         if (!result.Success)
         {
-            return BadRequest(new
-            {
-                message = result.Error
-            });
+            var errorResponse =
+                ApiResponse<object?>.Fail(
+                    result.Error
+                    ?? "Kategori oluşturulamadı.");
+
+            return BadRequest(errorResponse);
         }
+
+        var response =
+            ApiResponse<object?>.Ok(
+                new
+                {
+                    categoryId = result.CategoryId
+                },
+                "Kategori başarıyla oluşturuldu.");
 
         return StatusCode(
             StatusCodes.Status201Created,
-            new
-            {
-                message = "Kategori başarıyla oluşturuldu.",
-                categoryId = result.CategoryId
-            });
+            response);
     }
 
     [HttpGet]
@@ -62,6 +65,11 @@ public class CategoriesController : ControllerBase
             new GetCategoriesQuery(),
             cancellationToken);
 
-        return Ok(categories);
+        var response =
+            ApiResponse<List<CategoryDto>>.Ok(
+                categories,
+                "Kategoriler başarıyla getirildi.");
+
+        return Ok(response);
     }
 }

@@ -1,11 +1,13 @@
+using System.Security.Claims;
+using AiCommerceApi.Common.Responses;
 using AiCommerceApi.Dtos.Auth;
+using AiCommerceApi.Features.Auth.Commands.Login;
 using AiCommerceApi.Features.Auth.Commands.Register;
 using MediatR;
-using Microsoft.AspNetCore.Mvc;
-using AiCommerceApi.Features.Auth.Commands.Login;
-namespace AiCommerceApi.Controllers;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace AiCommerceApi.Controllers;
 
 [ApiController]
 [Route("api/auth")]
@@ -35,62 +37,89 @@ public class AuthController : ControllerBase
 
         if (!result.Success)
         {
-            return BadRequest(new
-            {
-                message = result.Error
-            });
+            var errorResponse =
+                ApiResponse<object?>.Fail(
+                    result.Error
+                    ?? "Kullanıcı oluşturulamadı.");
+
+            return BadRequest(errorResponse);
         }
 
-        return Ok(new
-        {
-            message = "Kullanıcı başarıyla oluşturuldu.",
-            userId = result.UserId
-        });
+        var response =
+            ApiResponse<object?>.Ok(
+                new
+                {
+                    userId = result.UserId
+                },
+                "Kullanıcı başarıyla oluşturuldu.");
+
+        return StatusCode(
+            StatusCodes.Status201Created,
+            response);
     }
+
     [HttpPost("login")]
-public async Task<IActionResult> Login(
-    LoginRequestDto request,
-    CancellationToken cancellationToken)
-{
-    var command = new LoginCommand(
-        request.Email,
-        request.Password);
-
-    var result = await _mediator.Send(
-        command,
-        cancellationToken);
-
-    if (!result.Success)
+    public async Task<IActionResult> Login(
+        LoginRequestDto request,
+        CancellationToken cancellationToken)
     {
-        return Unauthorized(new
+        var command = new LoginCommand(
+            request.Email,
+            request.Password);
+
+        var result = await _mediator.Send(
+            command,
+            cancellationToken);
+
+        if (!result.Success)
         {
-            message = result.Error
-        });
+            var errorResponse =
+                ApiResponse<object?>.Fail(
+                    result.Error
+                    ?? "E-posta veya şifre hatalı.");
+
+            return Unauthorized(errorResponse);
+        }
+
+        var response =
+            ApiResponse<object?>.Ok(
+                new
+                {
+                    token = result.Token,
+                    expiresAt = result.ExpiresAt
+                },
+                "Giriş başarılı.");
+
+        return Ok(response);
     }
 
-    return Ok(new
+    [Authorize]
+    [HttpGet("me")]
+    public IActionResult GetMe()
     {
-        token = result.Token,
-        expiresAt = result.ExpiresAt
-    });
-}
+        var userId =
+            User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-[Authorize]
-[HttpGet("me")]
-public IActionResult GetMe()
-{
-    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-    var fullName = User.FindFirstValue(ClaimTypes.Name);
-    var email = User.FindFirstValue(ClaimTypes.Email);
-    var role = User.FindFirstValue(ClaimTypes.Role);
+        var fullName =
+            User.FindFirstValue(ClaimTypes.Name);
 
-    return Ok(new
-    {
-        userId,
-        fullName,
-        email,
-        role
-    });
-}
+        var email =
+            User.FindFirstValue(ClaimTypes.Email);
 
+        var role =
+            User.FindFirstValue(ClaimTypes.Role);
+
+        var response =
+            ApiResponse<object?>.Ok(
+                new
+                {
+                    userId,
+                    fullName,
+                    email,
+                    role
+                },
+                "Kullanıcı bilgileri başarıyla getirildi.");
+
+        return Ok(response);
+    }
 }
