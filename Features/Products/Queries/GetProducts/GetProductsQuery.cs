@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using AiCommerceApi.Common.Pagination;
 using AiCommerceApi.Dtos.Products;
 using MediatR;
 
@@ -13,6 +10,9 @@ public record GetProductsQuery(
     int? CategoryId,
     decimal? MinPrice,
     decimal? MaxPrice,
-    bool? InStock
-)
-    : IRequest<List<ProductDto>>;
+    bool? InStock,
+    string? SortBy,
+    string? SortDirection,
+    int PageNumber,
+    int PageSize
+) : IRequest<PagedResult<ProductDto>>;

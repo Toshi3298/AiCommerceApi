@@ -1,12 +1,16 @@
+using AiCommerceApi.Common.Pagination;
 using AiCommerceApi.Data;
 using AiCommerceApi.Dtos.Products;
+using AiCommerceApi.Models;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace AiCommerceApi.Features.Products.Queries.GetProducts;
 
 public class GetProductsQueryHandler
-    : IRequestHandler<GetProductsQuery, List<ProductDto>>
+    : IRequestHandler<
+        GetProductsQuery,
+        PagedResult<ProductDto>>
 {
     private readonly ApplicationDbContext _context;
 
@@ -16,14 +20,13 @@ public class GetProductsQueryHandler
         _context = context;
     }
 
-    public async Task<List<ProductDto>> Handle(
+    public async Task<PagedResult<ProductDto>> Handle(
         GetProductsQuery request,
         CancellationToken cancellationToken)
     {
-        var query = _context.Products
+        IQueryable<Product> query = _context.Products
             .AsNoTracking()
-            .Where(product => product.IsActive)
-            .AsQueryable();
+            .Where(product => product.IsActive);
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
@@ -46,7 +49,8 @@ public class GetProductsQueryHandler
         if (request.CategoryId.HasValue)
         {
             query = query.Where(product =>
-                product.CategoryId == request.CategoryId.Value);
+                product.CategoryId ==
+                request.CategoryId.Value);
         }
 
         if (request.MinPrice.HasValue)
@@ -68,8 +72,51 @@ public class GetProductsQueryHandler
                 : query.Where(product => product.Stock == 0);
         }
 
-        return await query
-            .OrderBy(product => product.Name)
+        int totalCount = await query.CountAsync(
+            cancellationToken);
+
+        string sortBy =
+            request.SortBy?.Trim().ToLowerInvariant()
+            ?? "name";
+
+        string sortDirection =
+            request.SortDirection?.Trim().ToLowerInvariant()
+            ?? "asc";
+
+        bool descending = sortDirection == "desc";
+
+        query = sortBy switch
+        {
+            "price" => descending
+                ? query.OrderByDescending(
+                    product => product.Price)
+                : query.OrderBy(
+                    product => product.Price),
+
+            "stock" => descending
+                ? query.OrderByDescending(
+                    product => product.Stock)
+                : query.OrderBy(
+                    product => product.Stock),
+
+            "createdat" => descending
+                ? query.OrderByDescending(
+                    product => product.CreatedAt)
+                : query.OrderBy(
+                    product => product.CreatedAt),
+
+            _ => descending
+                ? query.OrderByDescending(
+                    product => product.Name)
+                : query.OrderBy(
+                    product => product.Name)
+        };
+
+        var products = await query
+            .Skip(
+                (request.PageNumber - 1) *
+                request.PageSize)
+            .Take(request.PageSize)
             .Select(product => new ProductDto
             {
                 Id = product.Id,
@@ -84,5 +131,15 @@ public class GetProductsQueryHandler
                 CategoryName = product.Category.Name
             })
             .ToListAsync(cancellationToken);
+
+        return new PagedResult<ProductDto>
+        {
+            Items = products,
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize,
+            TotalCount = totalCount,
+            TotalPages = (int)Math.Ceiling(
+                totalCount / (double)request.PageSize)
+        };
     }
 }
