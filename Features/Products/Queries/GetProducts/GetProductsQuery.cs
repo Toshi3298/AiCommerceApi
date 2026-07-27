@@ -7,5 +7,12 @@ using MediatR;
 
 namespace AiCommerceApi.Features.Products.Queries.GetProducts;
 
-public record GetProductsQuery
+public record GetProductsQuery(
+    string? Search,
+    string? Brand,
+    int? CategoryId,
+    decimal? MinPrice,
+    decimal? MaxPrice,
+    bool? InStock
+)
     : IRequest<List<ProductDto>>;

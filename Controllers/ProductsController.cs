@@ -65,10 +65,62 @@ public class ProductsController : ControllerBase
 
     [HttpGet]
     public async Task<IActionResult> GetProducts(
+        [FromQuery] string? search,
+        [FromQuery] string? brand,
+        [FromQuery] int? categoryId,
+        [FromQuery] decimal? minPrice,
+        [FromQuery] decimal? maxPrice,
+        [FromQuery] bool? inStock,
         CancellationToken cancellationToken)
     {
+        if (minPrice.HasValue && minPrice.Value < 0)
+        {
+            var errorResponse =
+                ApiResponse<List<ProductDto>>.Fail(
+                    "Minimum fiyat negatif olamaz.");
+
+            return BadRequest(errorResponse);
+        }
+
+        if (maxPrice.HasValue && maxPrice.Value < 0)
+        {
+            var errorResponse =
+                ApiResponse<List<ProductDto>>.Fail(
+                    "Maksimum fiyat negatif olamaz.");
+
+            return BadRequest(errorResponse);
+        }
+
+        if (minPrice.HasValue &&
+            maxPrice.HasValue &&
+            minPrice.Value > maxPrice.Value)
+        {
+            var errorResponse =
+                ApiResponse<List<ProductDto>>.Fail(
+                    "Minimum fiyat maksimum fiyattan büyük olamaz.");
+
+            return BadRequest(errorResponse);
+        }
+
+        if (categoryId.HasValue && categoryId.Value <= 0)
+        {
+            var errorResponse =
+                ApiResponse<List<ProductDto>>.Fail(
+                    "Kategori ID sıfırdan büyük olmalıdır.");
+
+            return BadRequest(errorResponse);
+        }
+
+        var query = new GetProductsQuery(
+            search,
+            brand,
+            categoryId,
+            minPrice,
+            maxPrice,
+            inStock);
+
         var products = await _mediator.Send(
-            new GetProductsQuery(),
+            query,
             cancellationToken);
 
         var response =

@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using AiCommerceApi.Data;
 using AiCommerceApi.Dtos.Products;
 using MediatR;
@@ -24,9 +20,55 @@ public class GetProductsQueryHandler
         GetProductsQuery request,
         CancellationToken cancellationToken)
     {
-        return await _context.Products
+        var query = _context.Products
             .AsNoTracking()
-            .Where(product =>product.IsActive)
+            .Where(product => product.IsActive)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            string search = request.Search.Trim();
+
+            query = query.Where(product =>
+                product.Name.Contains(search) ||
+                product.Description.Contains(search) ||
+                product.Brand.Contains(search));
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Brand))
+        {
+            string brand = request.Brand.Trim();
+
+            query = query.Where(product =>
+                product.Brand.Contains(brand));
+        }
+
+        if (request.CategoryId.HasValue)
+        {
+            query = query.Where(product =>
+                product.CategoryId == request.CategoryId.Value);
+        }
+
+        if (request.MinPrice.HasValue)
+        {
+            query = query.Where(product =>
+                product.Price >= request.MinPrice.Value);
+        }
+
+        if (request.MaxPrice.HasValue)
+        {
+            query = query.Where(product =>
+                product.Price <= request.MaxPrice.Value);
+        }
+
+        if (request.InStock.HasValue)
+        {
+            query = request.InStock.Value
+                ? query.Where(product => product.Stock > 0)
+                : query.Where(product => product.Stock == 0);
+        }
+
+        return await query
             .OrderBy(product => product.Name)
             .Select(product => new ProductDto
             {
