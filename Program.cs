@@ -1,4 +1,7 @@
 using AiCommerceApi.Data;
+using AiCommerceApi.Common.Behaviors;
+using FluentValidation;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using AiCommerceApi.Models;
 using Microsoft.AspNetCore.Identity;
@@ -7,6 +10,7 @@ using AiCommerceApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using AiCommerceApi.Common.Middleware;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
@@ -84,7 +88,16 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
+builder.Services.AddTransient(
+    typeof(IPipelineBehavior<,>),
+    typeof(ValidationBehavior<,>));
+
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
@@ -94,6 +107,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

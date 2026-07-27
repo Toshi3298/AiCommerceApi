@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 namespace AiCommerceApi.Common.Responses;
 
 public sealed class ApiResponse<T>
@@ -28,6 +24,7 @@ public sealed class ApiResponse<T>
         };
     }
 
+    // Tek hata için kullanılır.
     public static ApiResponse<T> Fail(
         string error,
         string message = "İşlem başarısız.")
@@ -38,6 +35,24 @@ public sealed class ApiResponse<T>
             Message = message,
             Data = default,
             Errors = new[] { error }
+        };
+    }
+
+    // Birden fazla validation hatası için kullanılır.
+    public static ApiResponse<T> Fail(
+        IEnumerable<string> errors,
+        string message = "İşlem başarısız.")
+    {
+        return new ApiResponse<T>
+        {
+            Success = false,
+            Message = message,
+            Data = default,
+            Errors = errors
+                .Where(error =>
+                    !string.IsNullOrWhiteSpace(error))
+                .Distinct()
+                .ToArray()
         };
     }
 }
