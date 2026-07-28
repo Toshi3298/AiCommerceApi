@@ -77,79 +77,6 @@ public class ProductsController : ControllerBase
         [FromQuery] int pageSize = 10,
         CancellationToken cancellationToken = default)
     {
-        if (minPrice.HasValue && minPrice.Value < 0)
-        {
-            return BadRequest(
-                ApiResponse<object?>.Fail(
-                    "Minimum fiyat negatif olamaz."));
-        }
-
-        if (maxPrice.HasValue && maxPrice.Value < 0)
-        {
-            return BadRequest(
-                ApiResponse<object?>.Fail(
-                    "Maksimum fiyat negatif olamaz."));
-        }
-
-        if (minPrice.HasValue &&
-            maxPrice.HasValue &&
-            minPrice.Value > maxPrice.Value)
-        {
-            return BadRequest(
-                ApiResponse<object?>.Fail(
-                    "Minimum fiyat maksimum fiyattan büyük olamaz."));
-        }
-
-        if (categoryId.HasValue && categoryId.Value <= 0)
-        {
-            return BadRequest(
-                ApiResponse<object?>.Fail(
-                    "Kategori ID sıfırdan büyük olmalıdır."));
-        }
-
-        if (pageNumber <= 0)
-        {
-            return BadRequest(
-                ApiResponse<object?>.Fail(
-                    "Sayfa numarası sıfırdan büyük olmalıdır."));
-        }
-
-        if (pageSize <= 0 || pageSize > 100)
-        {
-            return BadRequest(
-                ApiResponse<object?>.Fail(
-                    "Sayfa boyutu 1 ile 100 arasında olmalıdır."));
-        }
-
-        string[] allowedSortFields =
-        {
-            "name",
-            "price",
-            "stock",
-            "createdat"
-        };
-
-        string normalizedSortBy =
-            sortBy?.Trim().ToLowerInvariant() ?? "name";
-
-        if (!allowedSortFields.Contains(normalizedSortBy))
-        {
-            return BadRequest(
-                ApiResponse<object?>.Fail(
-                    "Sıralama alanı name, price, stock " +
-                    "veya createdAt olmalıdır."));
-        }
-
-        string normalizedSortDirection =
-            sortDirection?.Trim().ToLowerInvariant() ?? "asc";
-
-        if (normalizedSortDirection is not "asc" and not "desc")
-        {
-            return BadRequest(
-                ApiResponse<object?>.Fail(
-                    "Sıralama yönü asc veya desc olmalıdır."));
-        }
-
         var query = new GetProductsQuery(
             search,
             brand,
@@ -157,8 +84,8 @@ public class ProductsController : ControllerBase
             minPrice,
             maxPrice,
             inStock,
-            normalizedSortBy,
-            normalizedSortDirection,
+            sortBy,
+            sortDirection,
             pageNumber,
             pageSize);
 
