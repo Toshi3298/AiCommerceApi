@@ -21,15 +21,6 @@ public class UpdateCartItemCommandHandler
         UpdateCartItemCommand request,
         CancellationToken cancellationToken)
     {
-        if (request.Quantity <= 0)
-        {
-            return new UpdateCartItemResult
-            {
-                Success = false,
-                Error = "Ürün miktarı sıfırdan büyük olmalıdır."
-            };
-        }
-
         var cartItem = await _context.CartItems
             .Include(item => item.Cart)
             .Include(item => item.Product)
@@ -64,22 +55,24 @@ public class UpdateCartItemCommandHandler
             {
                 Success = false,
                 Error =
-                    $"Yeterli stok bulunmuyor. Mevcut stok: " +
-                    $"{cartItem.Product.Stock}"
+                    $"Yeterli stok bulunmuyor. " +
+                    $"Mevcut stok: {cartItem.Product.Stock}"
             };
         }
 
         cartItem.Quantity = request.Quantity;
         cartItem.Cart.UpdatedAt = DateTime.UtcNow;
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(
+            cancellationToken);
 
         return new UpdateCartItemResult
         {
             Success = true,
             Quantity = cartItem.Quantity,
             LineTotal =
-                cartItem.Product.Price * cartItem.Quantity
+                cartItem.Product.Price *
+                cartItem.Quantity
         };
     }
 }

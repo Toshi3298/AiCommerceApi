@@ -6,7 +6,9 @@ using Microsoft.EntityFrameworkCore;
 namespace AiCommerceApi.Features.Orders.Commands.CreateOrder;
 
 public class CreateOrderCommandHandler
-    : IRequestHandler<CreateOrderCommand, CreateOrderResult>
+    : IRequestHandler<
+        CreateOrderCommand,
+        CreateOrderResult>
 {
     private readonly ApplicationDbContext _context;
 
@@ -20,17 +22,12 @@ public class CreateOrderCommandHandler
         CreateOrderCommand request,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.ShippingAddress))
-        {
-            return Failure(
-                "Teslimat adresi boş bırakılamaz.");
-        }
-
         var cart = await _context.Carts
             .Include(cart => cart.CartItems)
                 .ThenInclude(item => item.Product)
             .FirstOrDefaultAsync(
-                cart => cart.AppUserId == request.UserId,
+                cart =>
+                    cart.AppUserId == request.UserId,
                 cancellationToken);
 
         if (cart is null || cart.CartItems.Count == 0)
@@ -47,7 +44,8 @@ public class CreateOrderCommandHandler
                     $"{cartItem.Product.Name} artık satışta değil.");
             }
 
-            if (cartItem.Quantity > cartItem.Product.Stock)
+            if (cartItem.Quantity >
+                cartItem.Product.Stock)
             {
                 return Failure(
                     $"{cartItem.Product.Name} için yeterli stok yok. " +
@@ -64,9 +62,12 @@ public class CreateOrderCommandHandler
             var order = new Order
             {
                 AppUserId = request.UserId,
+
                 ShippingAddress =
                     request.ShippingAddress.Trim(),
+
                 Status = OrderStatus.Pending,
+
                 TotalPrice = cart.CartItems.Sum(
                     item =>
                         item.Product.Price *
@@ -82,7 +83,8 @@ public class CreateOrderCommandHandler
                     UnitPrice = cartItem.Product.Price
                 });
 
-                cartItem.Product.Stock -= cartItem.Quantity;
+                cartItem.Product.Stock -=
+                    cartItem.Quantity;
             }
 
             _context.Orders.Add(order);
@@ -108,14 +110,14 @@ public class CreateOrderCommandHandler
         catch
         {
             await transaction.RollbackAsync(
-                cancellationToken);
+                CancellationToken.None);
 
-            return Failure(
-                "Sipariş oluşturulurken bir hata meydana geldi.");
+            throw;
         }
     }
 
-    private static CreateOrderResult Failure(string error)
+    private static CreateOrderResult Failure(
+        string error)
     {
         return new CreateOrderResult
         {

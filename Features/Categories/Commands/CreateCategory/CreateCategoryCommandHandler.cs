@@ -1,16 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using AiCommerceApi.Data;
 using AiCommerceApi.Models;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace AiCommerceApi.Features.Categories.Commands.CreateCategory
-{
+namespace AiCommerceApi.Features.Categories.Commands.CreateCategory;
+
 public class CreateCategoryCommandHandler
-    : IRequestHandler<CreateCategoryCommand, CreateCategoryResult>
+    : IRequestHandler<
+        CreateCategoryCommand,
+        CreateCategoryResult>
 {
     private readonly ApplicationDbContext _context;
 
@@ -26,18 +24,10 @@ public class CreateCategoryCommandHandler
     {
         string categoryName = request.Name.Trim();
 
-        if (string.IsNullOrWhiteSpace(categoryName))
-        {
-            return new CreateCategoryResult
-            {
-                Success = false,
-                Error = "Kategori adı boş olamaz."
-            };
-        }
-
         bool categoryExists =
             await _context.Categories.AnyAsync(
-                category => category.Name == categoryName,
+                category =>
+                    category.Name == categoryName,
                 cancellationToken);
 
         if (categoryExists)
@@ -52,12 +42,16 @@ public class CreateCategoryCommandHandler
         var category = new Category
         {
             Name = categoryName,
-            Description = request.Description?.Trim()
+
+            Description =
+                request.Description?.Trim()
+                ?? string.Empty
         };
 
         _context.Categories.Add(category);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(
+            cancellationToken);
 
         return new CreateCategoryResult
         {
@@ -65,5 +59,4 @@ public class CreateCategoryCommandHandler
             CategoryId = category.Id
         };
     }
-}
 }

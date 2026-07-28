@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using AiCommerceApi.Data;
 using AiCommerceApi.Models;
 using MediatR;
@@ -10,11 +6,14 @@ using Microsoft.EntityFrameworkCore;
 namespace AiCommerceApi.Features.Carts.Commands.AddCartItem;
 
 public class AddCartItemCommandHandler
-    : IRequestHandler<AddCartItemCommand, AddCartItemResult>
+    : IRequestHandler<
+        AddCartItemCommand,
+        AddCartItemResult>
 {
     private readonly ApplicationDbContext _context;
 
-    public AddCartItemCommandHandler(ApplicationDbContext context)
+    public AddCartItemCommandHandler(
+        ApplicationDbContext context)
     {
         _context = context;
     }
@@ -23,12 +22,6 @@ public class AddCartItemCommandHandler
         AddCartItemCommand request,
         CancellationToken cancellationToken)
     {
-        if (request.Quantity <= 0)
-        {
-            return Failure(
-                "Ürün miktarı sıfırdan büyük olmalıdır.");
-        }
-
         var product = await _context.Products
             .FirstOrDefaultAsync(
                 product =>
@@ -45,7 +38,8 @@ public class AddCartItemCommandHandler
         var cart = await _context.Carts
             .Include(cart => cart.CartItems)
             .FirstOrDefaultAsync(
-                cart => cart.AppUserId == request.UserId,
+                cart =>
+                    cart.AppUserId == request.UserId,
                 cancellationToken);
 
         if (cart is null)
@@ -60,20 +54,23 @@ public class AddCartItemCommandHandler
 
         var existingCartItem = cart.CartItems
             .FirstOrDefault(
-                item => item.ProductId == request.ProductId);
+                item =>
+                    item.ProductId == request.ProductId);
 
         int newQuantity = request.Quantity;
 
         if (existingCartItem is not null)
         {
             newQuantity =
-                existingCartItem.Quantity + request.Quantity;
+                existingCartItem.Quantity +
+                request.Quantity;
         }
 
         if (newQuantity > product.Stock)
         {
             return Failure(
-                $"Yeterli stok bulunmuyor. Mevcut stok: {product.Stock}");
+                $"Yeterli stok bulunmuyor. " +
+                $"Mevcut stok: {product.Stock}");
         }
 
         if (existingCartItem is null)
@@ -93,7 +90,8 @@ public class AddCartItemCommandHandler
 
         cart.UpdatedAt = DateTime.UtcNow;
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(
+            cancellationToken);
 
         return new AddCartItemResult
         {
@@ -103,7 +101,8 @@ public class AddCartItemCommandHandler
         };
     }
 
-    private static AddCartItemResult Failure(string error)
+    private static AddCartItemResult Failure(
+        string error)
     {
         return new AddCartItemResult
         {
