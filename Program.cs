@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using AiCommerceApi.Common.Middleware;
+using AiCommerceApi.Data.Seed;
+using AiCommerceApi.Services.Ai;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
@@ -94,22 +96,39 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddTransient(
     typeof(IPipelineBehavior<,>),
     typeof(ValidationBehavior<,>));
+builder.Services.AddScoped<
+    IAiSqlGenerator,
+    MockAiSqlGenerator>();
+builder.Services.AddScoped<
+    ISqlSecurityService,
+    SqlSecurityService>();
+builder.Services.AddScoped<
+    ISqlQueryExecutor,
+    SqlQueryExecutor>();
 
 var app = builder.Build();
+    using (var scope = app.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider
+            .GetRequiredService<ApplicationDbContext>();
 
-app.UseMiddleware<ExceptionHandlingMiddleware>();
+        await context.Database.MigrateAsync();
+        await DatabaseSeeder.SeedAsync(context);
+    }
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-app.UseHttpsRedirection();
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
 
-app.UseAuthentication();
-app.UseAuthorization();
+    app.UseHttpsRedirection();
 
-app.MapControllers();
+    app.UseAuthentication();
+    app.UseAuthorization();
 
-app.Run();
+    app.MapControllers();
+
+    app.Run();
