@@ -107,7 +107,15 @@ public sealed class SqlSecurityService : ISqlSecurityService
             return SqlValidationResult.Failure(
                 "Sorguda TOP (1-50) sınırı bulunmalıdır.");
         }
-
+        
+        if (!Regex.IsMatch(
+                normalizedSql,
+                @"\bp\.IsActive\s*=\s*1\b",
+                RegexOptions.IgnoreCase))
+        {
+            return SqlValidationResult.Failure(
+                "Sorguda aktif ürün filtresi bulunmalıdır.");
+        }
         return SqlValidationResult.Success();
     }
 }

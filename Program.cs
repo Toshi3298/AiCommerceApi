@@ -96,9 +96,9 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddTransient(
     typeof(IPipelineBehavior<,>),
     typeof(ValidationBehavior<,>));
-builder.Services.AddScoped<
+builder.Services.AddHttpClient<
     IAiSqlGenerator,
-    MockAiSqlGenerator>();
+    OllamaAiSqlGenerator>();
 builder.Services.AddScoped<
     ISqlSecurityService,
     SqlSecurityService>();
