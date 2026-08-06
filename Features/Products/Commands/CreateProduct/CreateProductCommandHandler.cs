@@ -43,6 +43,11 @@ public class CreateProductCommandHandler
             Price = request.Price,
             Stock = request.Stock,
             CategoryId = request.CategoryId,
+
+            ImageUrl = string.IsNullOrWhiteSpace(request.ImageUrl)
+                ? null
+                : request.ImageUrl.Trim(),
+
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };

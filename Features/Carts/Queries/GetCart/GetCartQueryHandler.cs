@@ -39,13 +39,13 @@ public class GetCartQueryHandler
                 Cart = new CartResponseDto()
             };
         }
-
         var items = cart.CartItems
             .Select(item => new CartItemResponseDto
             {
                 CartItemId = item.Id,
                 ProductId = item.ProductId,
                 ProductName = item.Product.Name,
+                ImageUrl = item.Product.ImageUrl,
                 UnitPrice = item.Product.Price,
                 Quantity = item.Quantity,
                 LineTotal =

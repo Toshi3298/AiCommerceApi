@@ -12,5 +12,7 @@ public record CreateProductCommand(
     string Brand,
     decimal Price,
     int Stock,
-    int CategoryId
+    int CategoryId,
+    string? ImageUrl
+
 ) : IRequest<CreateProductResult>;

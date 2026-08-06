@@ -71,6 +71,12 @@ public sealed class SqlQueryExecutor : ISqlQueryExecutor
 
                 CategoryId = reader.GetInt32(
                     reader.GetOrdinal("CategoryId")),
+                    
+                ImageUrl = reader.IsDBNull(
+                    reader.GetOrdinal("ImageUrl"))
+                    ? null
+                    : reader.GetString(
+                        reader.GetOrdinal("ImageUrl")),
 
                 CategoryName = reader.GetString(
                     reader.GetOrdinal("CategoryName"))

@@ -84,7 +84,8 @@ public sealed class OllamaAiSqlGenerator
             Stock int,
             IsActive bit,
             CreatedAt datetime2,
-            CategoryId int
+            CategoryId int,
+            ImageUrl nvarchar
 
             Categories:
             Id int,
@@ -117,6 +118,7 @@ public sealed class OllamaAiSqlGenerator
             p.IsActive,
             p.CreatedAt,
             p.CategoryId,
+            p.ImageUrl,
             c.Name AS CategoryName
 
             - Açıklama yazma.

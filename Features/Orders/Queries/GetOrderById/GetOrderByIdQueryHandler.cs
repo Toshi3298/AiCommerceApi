@@ -40,6 +40,7 @@ public class GetOrderByIdQueryHandler
                     {
                         ProductId = item.ProductId,
                         ProductName = item.Product.Name,
+                        ImageUrl = item.Product.ImageUrl,
                         Quantity = item.Quantity,
                         UnitPrice = item.UnitPrice,
                         LineTotal =

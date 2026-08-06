@@ -90,6 +90,10 @@ public class ApplicationDbContext : DbContext
             .WithMany(product => product.OrderItems)
             .HasForeignKey(item => item.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
+        // Ürün görsel adresi en fazla 2048 karakter olabilir.
+        modelBuilder.Entity<Product>()
+            .Property(product => product.ImageUrl)
+            .HasMaxLength(2048);
 
         // Para alanlarının MSSQL türleri
         modelBuilder.Entity<Product>()

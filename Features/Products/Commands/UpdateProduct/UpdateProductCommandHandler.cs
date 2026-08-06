@@ -58,6 +58,10 @@ public class UpdateProductCommandHandler
         product.Stock = request.Stock;
         product.CategoryId = request.CategoryId;
         product.IsActive = request.IsActive;
+        product.ImageUrl =
+            string.IsNullOrWhiteSpace(request.ImageUrl)
+                ? null
+                : request.ImageUrl.Trim();
 
         await _context.SaveChangesAsync(
             cancellationToken);

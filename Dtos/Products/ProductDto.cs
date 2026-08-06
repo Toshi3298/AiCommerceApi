@@ -24,6 +24,7 @@ namespace AiCommerceApi.Dtos.Products
     public DateTime CreatedAt { get; set; }
 
     public int CategoryId { get; set; }
+    public string? ImageUrl { get; set; }
 
     public string CategoryName { get; set; } = string.Empty;
     }

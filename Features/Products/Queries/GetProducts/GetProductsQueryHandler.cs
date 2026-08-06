@@ -128,6 +128,7 @@ public class GetProductsQueryHandler
                 IsActive = product.IsActive,
                 CreatedAt = product.CreatedAt,
                 CategoryId = product.CategoryId,
+                ImageUrl = product.ImageUrl,
                 CategoryName = product.Category.Name
             })
             .ToListAsync(cancellationToken);

@@ -15,6 +15,9 @@ namespace AiCommerceApi.Models
 
     public string Brand { get; set; } = string.Empty;
 
+    public string? ImageUrl { get; set; }
+
+
     public decimal Price { get; set; }
 
     public int Stock { get; set; }

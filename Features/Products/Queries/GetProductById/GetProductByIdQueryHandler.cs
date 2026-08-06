@@ -38,6 +38,7 @@ public class GetProductByIdQueryHandler
                 IsActive = product.IsActive,
                 CreatedAt = product.CreatedAt,
                 CategoryId = product.CategoryId,
+                ImageUrl = product.ImageUrl,
                 CategoryName = product.Category.Name
             })
             .FirstOrDefaultAsync(cancellationToken);

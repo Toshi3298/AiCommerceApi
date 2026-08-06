@@ -34,7 +34,8 @@ public class ProductsController : ControllerBase
             request.Brand,
             request.Price,
             request.Stock,
-            request.CategoryId);
+            request.CategoryId,
+            request.ImageUrl);
 
         var result = await _mediator.Send(
             command,
@@ -142,7 +143,8 @@ public class ProductsController : ControllerBase
             request.Price,
             request.Stock,
             request.CategoryId,
-            request.IsActive);
+            request.IsActive,
+            request.ImageUrl);
 
         var result = await _mediator.Send(
             command,

@@ -40,5 +40,28 @@ public class CreateProductCommandValidator
             .GreaterThan(0)
             .WithMessage(
                 "Geçerli bir kategori seçilmelidir.");
+        RuleFor(command => command.ImageUrl)
+            .MaximumLength(2048)
+            .WithMessage(
+                "Ürün görseli adresi en fazla 2048 karakter olabilir.")
+            .Must(BeValidImageUrl)
+            .WithMessage(
+                "Geçerli bir HTTP veya HTTPS görsel adresi girilmelidir.")
+            .When(command =>
+                !string.IsNullOrWhiteSpace(command.ImageUrl));
+    }
+    private static bool BeValidImageUrl(string? imageUrl)
+    {
+        if (string.IsNullOrWhiteSpace(imageUrl))
+        {
+            return true;
+        }
+
+        return Uri.TryCreate(
+                imageUrl.Trim(),
+                UriKind.Absolute,
+                out Uri? uri)
+            && (uri.Scheme == Uri.UriSchemeHttp ||
+                uri.Scheme == Uri.UriSchemeHttps);
     }
 }
