@@ -22,7 +22,7 @@ public class ProductsController : ControllerBase
         _mediator = mediator;
     }
 
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> CreateProduct(
         CreateProductRequestDto request,
@@ -128,7 +128,7 @@ public class ProductsController : ControllerBase
         return Ok(response);
     }
 
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateProduct(
         int id,
@@ -178,7 +178,7 @@ public class ProductsController : ControllerBase
         return Ok(response);
     }
 
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteProduct(
         int id,
