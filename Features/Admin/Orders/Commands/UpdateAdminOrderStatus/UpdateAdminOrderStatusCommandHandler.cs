@@ -24,10 +24,11 @@ public class UpdateAdminOrderStatusCommandHandler
         CancellationToken cancellationToken)
     {
         var order = await _context.Orders
+            .Include(order => order.OrderItems)
+                .ThenInclude(item => item.Product)
             .FirstOrDefaultAsync(
                 order => order.Id == request.OrderId,
                 cancellationToken);
-
         if (order is null)
         {
             return new UpdateAdminOrderStatusResult
@@ -61,6 +62,13 @@ public class UpdateAdminOrderStatusCommandHandler
                 $"{newStatus} durumuna geçirilemez.");
         }
 
+        if (newStatus == OrderStatus.Cancelled)
+        {
+            foreach (var orderItem in order.OrderItems)
+            {
+                orderItem.Product.Stock += orderItem.Quantity;
+            }
+        }
         order.Status = newStatus;
 
         await _context.SaveChangesAsync(
