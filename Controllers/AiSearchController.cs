@@ -4,6 +4,10 @@ using AiCommerceApi.Features.AiSearch.Queries
     .SearchProductsWithAi;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using AiCommerceApi.Features.AiSearch.Queries
+    .InterpretProductFilter;
+using AiCommerceApi.Features.AiSearch.Queries
+    .SearchProductsWithFilter;
 
 namespace AiCommerceApi.Controllers;
 
@@ -30,6 +34,40 @@ public sealed class AiSearchController : ControllerBase
         var response = ApiResponse<AiSearchResponseDto>.Ok(
             result,
             "AI ürün araması başarıyla işlendi.");
+
+        return Ok(response);
+    }
+    [HttpPost("interpret")]
+    public async Task<IActionResult> InterpretProductFilter(
+        AiSearchRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var filter = await _mediator.Send(
+            new InterpretProductFilterQuery(
+                request.Prompt),
+            cancellationToken);
+
+        var response =
+            ApiResponse<AiProductSearchFilterDto>.Ok(
+                filter,
+                "AI ürün arama filtreleri başarıyla yorumlandı.");
+
+        return Ok(response);
+    }
+    [HttpPost("filter-search")]
+    public async Task<IActionResult> SearchProductsWithFilter(
+        AiSearchRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new SearchProductsWithFilterQuery(
+                request.Prompt),
+            cancellationToken);
+
+        var response =
+            ApiResponse<AiFilterSearchResponseDto>.Ok(
+                result,
+                "AI filtre tabanlı ürün araması başarıyla işlendi.");
 
         return Ok(response);
     }

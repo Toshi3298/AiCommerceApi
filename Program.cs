@@ -13,6 +13,8 @@ using Microsoft.OpenApi.Models;
 using AiCommerceApi.Common.Middleware;
 using AiCommerceApi.Data.Seed;
 using AiCommerceApi.Services.Ai;
+using AiCommerceApi.Services.Ai.Filters;
+using AiCommerceApi.Services.Ai.Tools;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
@@ -109,6 +111,12 @@ builder.Services.AddTransient(
 builder.Services.AddHttpClient<
     IAiSqlGenerator,
     OllamaAiSqlGenerator>();
+builder.Services.AddHttpClient<
+    IAiProductFilterInterpreter,
+    OllamaAiProductFilterInterpreter>();
+builder.Services.AddScoped<
+    IAiProductSearchTool,
+    EfProductSearchTool>();
 builder.Services.AddScoped<
     ISqlSecurityService,
     SqlSecurityService>();
