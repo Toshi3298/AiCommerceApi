@@ -81,6 +81,7 @@ public sealed class OllamaAiProductFilterInterpreter
             Prompt = prompt.Trim(),
             Format = "json",
             Stream = false,
+
             Options = new OllamaOptions
             {
                 Temperature = 0
@@ -98,9 +99,11 @@ public sealed class OllamaAiProductFilterInterpreter
         var result =
             await response.Content
                 .ReadFromJsonAsync<OllamaGenerateResponse>(
-                    cancellationToken: cancellationToken);
+                    cancellationToken:
+                        cancellationToken);
 
-        if (string.IsNullOrWhiteSpace(result?.Response))
+        if (string.IsNullOrWhiteSpace(
+                result?.Response))
         {
             throw new InvalidOperationException(
                 "Ollama geçerli bir ürün filtresi üretmedi.");
@@ -114,16 +117,88 @@ public sealed class OllamaAiProductFilterInterpreter
                         result.Response,
                         JsonOptions);
 
-            return filter
-                ?? throw new InvalidOperationException(
+            if (filter is null)
+            {
+                throw new InvalidOperationException(
                     "Ollama ürün filtresi boş döndü.");
+            }
+
+            return NormalizeFilter(filter);
         }
         catch (JsonException exception)
         {
             throw new InvalidOperationException(
-                "Ollama ürün filtresini geçerli JSON biçiminde döndürmedi.",
+                "Ollama ürün filtresini geçerli " +
+                "JSON biçiminde döndürmedi.",
                 exception);
         }
+    }
+
+    private static AiProductSearchFilterDto
+        NormalizeFilter(
+            AiProductSearchFilterDto filter)
+    {
+        string sortBy =
+            filter.SortBy?
+                .Trim()
+                .ToLowerInvariant()
+            ?? "name";
+
+        sortBy = sortBy switch
+        {
+            "name" => "name",
+            "price" => "price",
+            "stock" => "stock",
+            "createdat" => "createdat",
+            _ => "name"
+        };
+
+        string sortDirection =
+            filter.SortDirection?
+                .Trim()
+                .ToLowerInvariant()
+            ?? "asc";
+
+        sortDirection = sortDirection switch
+        {
+            "asc" => "asc",
+            "desc" => "desc",
+            _ => "asc"
+        };
+
+        int limit =
+            filter.Limit is >= 1 and <= 50
+                ? filter.Limit
+                : 50;
+
+        return new AiProductSearchFilterDto
+        {
+            Search =
+                NormalizeText(filter.Search),
+
+            Brand =
+                NormalizeText(filter.Brand),
+
+            CategoryName =
+                NormalizeText(
+                    filter.CategoryName),
+
+            MinPrice = filter.MinPrice,
+            MaxPrice = filter.MaxPrice,
+            InStock = filter.InStock,
+
+            SortBy = sortBy,
+            SortDirection = sortDirection,
+            Limit = limit
+        };
+    }
+
+    private static string? NormalizeText(
+        string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? null
+            : value.Trim();
     }
 
     private sealed class OllamaGenerateRequest
