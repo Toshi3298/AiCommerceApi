@@ -15,6 +15,11 @@ using AiCommerceApi.Data.Seed;
 using AiCommerceApi.Services.Ai;
 using AiCommerceApi.Services.Ai.Filters;
 using AiCommerceApi.Services.Ai.Tools;
+using AiCommerceApi.Features.BiaAgent.Tools;
+using AiCommerceApi.Features.BiaAgent.Planning;
+using AiCommerceApi.Features.BiaAgent.Orchestration;
+
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
@@ -123,6 +128,19 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<
     ISqlQueryExecutor,
     SqlQueryExecutor>();
+builder.Services.AddScoped<
+    IAiProductSearchTool,
+    EfProductSearchTool>();
+
+builder.Services.AddScoped<
+    IAiProductDetailsTool,
+    EfProductDetailsTool>();
+builder.Services.AddHttpClient<
+    IBiaActionPlanner,
+    OllamaBiaActionPlanner>();
+builder.Services.AddScoped<
+    IBiaAgentOrchestrator,
+    BiaAgentOrchestrator>();
 
 var app = builder.Build();
     using (var scope = app.Services.CreateScope())

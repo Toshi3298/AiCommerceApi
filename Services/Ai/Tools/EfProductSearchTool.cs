@@ -6,7 +6,6 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
 namespace AiCommerceApi.Services.Ai.Tools;
-
 public sealed class EfProductSearchTool
     : IAiProductSearchTool
 {
