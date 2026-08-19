@@ -161,6 +161,18 @@ public sealed class OllamaBiaActionPlanner
             BiaAgentActions.SearchThenGetDetails =>
                 BiaAgentActions.SearchThenGetDetails,
 
+            BiaAgentActions.GetPreviousProductDetails =>
+                BiaAgentActions.GetPreviousProductDetails,
+
+            BiaAgentActions.PrepareAddToCart =>
+                BiaAgentActions.PrepareAddToCart,
+
+            BiaAgentActions.ConfirmPendingAction =>
+                BiaAgentActions.ConfirmPendingAction,
+
+            BiaAgentActions.CancelPendingAction =>
+                BiaAgentActions.CancelPendingAction,
+
             _ => BiaAgentActions.Unsupported
         };
 
@@ -175,19 +187,115 @@ public sealed class OllamaBiaActionPlanner
                 ? null
                 : plan.ProductName.Trim();
 
-        if (action ==
-                BiaAgentActions.GetProductDetails &&
-            productId is null &&
-            productName is null)
+        int? referencePosition =
+            plan.ReferencePosition is > 0 and <= 50
+                ? plan.ReferencePosition
+                : null;
+
+        bool isLast =
+            plan.IsLast;
+
+        int? quantity =
+            plan.Quantity is > 0 and <= 99
+                ? plan.Quantity
+                : null;
+
+        switch (action)
         {
-            action = BiaAgentActions.Unsupported;
+            case BiaAgentActions.GetProductDetails:
+            {
+                referencePosition = null;
+                isLast = false;
+                quantity = null;
+
+                if (productId is null &&
+                    productName is null)
+                {
+                    action =
+                        BiaAgentActions.Unsupported;
+                }
+
+                break;
+            }
+
+            case BiaAgentActions.GetPreviousProductDetails:
+            {
+                productId = null;
+                productName = null;
+                quantity = null;
+
+                if (isLast)
+                {
+                    referencePosition = null;
+                }
+                else if (referencePosition is null)
+                {
+                    action =
+                        BiaAgentActions.Unsupported;
+                }
+
+                break;
+            }
+
+            case BiaAgentActions.PrepareAddToCart:
+            {
+                quantity ??= 1;
+
+                if (isLast)
+                {
+                    referencePosition = null;
+                    productId = null;
+                    productName = null;
+                }
+                else if (referencePosition.HasValue)
+                {
+                    productId = null;
+                    productName = null;
+                }
+                else if (productId.HasValue)
+                {
+                    productName = null;
+                }
+                else if (productName is null)
+                {
+                    action =
+                        BiaAgentActions.Unsupported;
+                    quantity = null;
+                }
+
+                break;
+            }
+
+            case BiaAgentActions.ConfirmPendingAction:
+            case BiaAgentActions.CancelPendingAction:
+            {
+                productId = null;
+                productName = null;
+                referencePosition = null;
+                isLast = false;
+                quantity = null;
+                break;
+            }
+
+            default:
+            {
+                productId = null;
+                productName = null;
+                referencePosition = null;
+                isLast = false;
+                quantity = null;
+                break;
+            }
         }
 
         return new BiaAgentPlanDto
         {
             Action = action,
             ProductId = productId,
-            ProductName = productName
+            ProductName = productName,
+            ReferencePosition = referencePosition,
+            IsLast = isLast,
+            Quantity = quantity
         };
     }
 

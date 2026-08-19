@@ -4,6 +4,8 @@ namespace AiCommerceApi.Features.BiaAgent.Chat;
 
 public sealed class BiaChatResponseDto
 {
+    public Guid ConversationId { get; init; }
+
     public string Action { get; init; } =
         string.Empty;
 
@@ -14,4 +16,12 @@ public sealed class BiaChatResponseDto
         [];
 
     public ProductDto? Product { get; init; }
+
+    public bool RequiresAuthentication { get; init; }
+
+    public bool RequiresConfirmation { get; init; }
+
+    public int? CartItemId { get; init; }
+
+    public int? CartQuantity { get; init; }
 }

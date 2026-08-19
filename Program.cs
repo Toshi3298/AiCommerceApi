@@ -18,6 +18,16 @@ using AiCommerceApi.Services.Ai.Tools;
 using AiCommerceApi.Features.BiaAgent.Tools;
 using AiCommerceApi.Features.BiaAgent.Planning;
 using AiCommerceApi.Features.BiaAgent.Orchestration;
+using AiCommerceApi.Features.BiaAgent.Memory;
+using AiCommerceApi.Features.BiaAgent.Actions;
+using AiCommerceApi.Features.BiaAgent.Actions.SearchProducts;
+using AiCommerceApi.Features.BiaAgent.Actions.GetProductDetails;
+using AiCommerceApi.Features.BiaAgent.Actions.SearchThenGetDetails;
+using AiCommerceApi.Features.BiaAgent.Actions.GetPreviousProductDetails;
+using AiCommerceApi.Features.BiaAgent.Resolution;
+using AiCommerceApi.Features.BiaAgent.Actions.PrepareAddToCart;
+using AiCommerceApi.Features.BiaAgent.Actions.CancelPendingAction;
+using AiCommerceApi.Features.BiaAgent.Actions.ConfirmPendingAction;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -141,6 +151,48 @@ builder.Services.AddHttpClient<
 builder.Services.AddScoped<
     IBiaAgentOrchestrator,
     BiaAgentOrchestrator>();
+builder.Services.AddMemoryCache();
+
+builder.Services.AddSingleton<
+    IBiaConversationMemory,
+    InMemoryBiaConversationMemory>();
+
+builder.Services.AddScoped<
+    IBiaCartTool,
+    MediatRBiaCartTool>();
+
+builder.Services.AddScoped<
+    IBiaAgentActionHandler,
+    SearchProductsActionHandler>();
+
+builder.Services.AddScoped<
+    IBiaAgentActionHandler,
+    GetProductDetailsActionHandler>();
+
+builder.Services.AddScoped<
+    IBiaAgentActionHandler,
+    SearchThenGetDetailsActionHandler>();
+
+builder.Services.AddScoped<
+    IBiaAgentActionHandler,
+    GetPreviousProductDetailsActionHandler>();
+    
+builder.Services.AddScoped<
+    IBiaPlanProductResolver,
+    BiaPlanProductResolver>();
+
+builder.Services.AddScoped<
+    IBiaAgentActionHandler,
+    PrepareAddToCartActionHandler>();
+
+builder.Services.AddScoped<
+    IBiaAgentActionHandler,
+    CancelPendingActionHandler>();
+
+builder.Services.AddScoped<
+    IBiaAgentActionHandler,
+    ConfirmPendingActionHandler>();
+
 
 var app = builder.Build();
     using (var scope = app.Services.CreateScope())
