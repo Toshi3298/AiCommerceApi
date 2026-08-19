@@ -2,6 +2,7 @@ using AiCommerceApi.Dtos.Products;
 using AiCommerceApi.Features.BiaAgent.Chat;
 using AiCommerceApi.Features.BiaAgent.Planning;
 using AiCommerceApi.Features.BiaAgent.Tools;
+using AiCommerceApi.Features.BiaAgent.Memory;
 
 namespace AiCommerceApi.Features.BiaAgent.Actions
     .GetProductDetails;
@@ -11,12 +12,18 @@ public sealed class GetProductDetailsActionHandler
 {
     private readonly IAiProductDetailsTool
         _productDetailsTool;
+    private readonly IBiaConversationMemory
+        _conversationMemory;
 
     public GetProductDetailsActionHandler(
-        IAiProductDetailsTool productDetailsTool)
+        IAiProductDetailsTool productDetailsTool,
+        IBiaConversationMemory conversationMemory)
     {
         _productDetailsTool =
             productDetailsTool;
+
+        _conversationMemory =
+            conversationMemory;
     }
 
     public string Action =>
@@ -55,6 +62,10 @@ public sealed class GetProductDetailsActionHandler
                     "bulamadım."
             };
         }
+
+        _conversationMemory.SaveCurrentProductId(
+            context.ConversationId,
+            product.Id);
 
         return new BiaChatResponseDto
         {

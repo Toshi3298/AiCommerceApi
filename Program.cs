@@ -1,90 +1,119 @@
-using AiCommerceApi.Data;
-using AiCommerceApi.Common.Behaviors;
-using FluentValidation;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
-using AiCommerceApi.Models;
-using Microsoft.AspNetCore.Identity;
 using System.Text;
-using AiCommerceApi.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using AiCommerceApi.Common.Behaviors;
 using AiCommerceApi.Common.Middleware;
+using AiCommerceApi.Data;
 using AiCommerceApi.Data.Seed;
+using AiCommerceApi.Features.BiaAgent.Actions;
+using AiCommerceApi.Features.BiaAgent.Actions.CancelPendingAction;
+using AiCommerceApi.Features.BiaAgent.Actions.ConfirmPendingAction;
+using AiCommerceApi.Features.BiaAgent.Actions.GetPreviousProductDetails;
+using AiCommerceApi.Features.BiaAgent.Actions.GetProductDetails;
+using AiCommerceApi.Features.BiaAgent.Actions.PrepareAddToCart;
+using AiCommerceApi.Features.BiaAgent.Actions.SearchProducts;
+using AiCommerceApi.Features.BiaAgent.Actions.SearchThenGetDetails;
+using AiCommerceApi.Features.BiaAgent.Memory;
+using AiCommerceApi.Features.BiaAgent.Orchestration;
+using AiCommerceApi.Features.BiaAgent.Planning;
+using AiCommerceApi.Features.BiaAgent.Resolution;
+using AiCommerceApi.Features.BiaAgent.Tools;
+using AiCommerceApi.Models;
+using AiCommerceApi.Services;
 using AiCommerceApi.Services.Ai;
 using AiCommerceApi.Services.Ai.Filters;
 using AiCommerceApi.Services.Ai.Tools;
-using AiCommerceApi.Features.BiaAgent.Tools;
-using AiCommerceApi.Features.BiaAgent.Planning;
-using AiCommerceApi.Features.BiaAgent.Orchestration;
-using AiCommerceApi.Features.BiaAgent.Memory;
-using AiCommerceApi.Features.BiaAgent.Actions;
-using AiCommerceApi.Features.BiaAgent.Actions.SearchProducts;
-using AiCommerceApi.Features.BiaAgent.Actions.GetProductDetails;
-using AiCommerceApi.Features.BiaAgent.Actions.SearchThenGetDetails;
-using AiCommerceApi.Features.BiaAgent.Actions.GetPreviousProductDetails;
-using AiCommerceApi.Features.BiaAgent.Resolution;
-using AiCommerceApi.Features.BiaAgent.Actions.PrepareAddToCart;
-using AiCommerceApi.Features.BiaAgent.Actions.CancelPendingAction;
-using AiCommerceApi.Features.BiaAgent.Actions.ConfirmPendingAction;
+using FluentValidation;
+using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
+var builder =
+    WebApplication.CreateBuilder(args);
 
-var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<ApplicationDbContext>(
+    options =>
+        options.UseSqlServer(
+            builder.Configuration
+                .GetConnectionString(
+                    "DefaultConnection")));
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(options =>
 {
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "JWT token değerini girin."
-    });
-
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
+    options.AddSecurityDefinition(
+        "Bearer",
+        new OpenApiSecurityScheme
         {
-            new OpenApiSecurityScheme
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Description = "JWT token değerini girin."
+        });
+
+    options.AddSecurityRequirement(
+        new OpenApiSecurityRequirement
+        {
             {
-                Reference = new OpenApiReference
+                new OpenApiSecurityScheme
                 {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
+                    Reference =
+                        new OpenApiReference
+                        {
+                            Type =
+                                ReferenceType
+                                    .SecurityScheme,
+
+                            Id = "Bearer"
+                        }
+                },
+                Array.Empty<string>()
+            }
+        });
 });
+
 builder.Services.AddMediatR(configuration =>
     configuration.RegisterServicesFromAssembly(
         typeof(Program).Assembly));
+
+builder.Services.AddValidatorsFromAssemblyContaining<
+    Program>();
+
+builder.Services.AddTransient(
+    typeof(IPipelineBehavior<,>),
+    typeof(ValidationBehavior<,>));
 
 builder.Services.AddScoped<
     IPasswordHasher<AppUser>,
     PasswordHasher<AppUser>>();
 
-builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+builder.Services.AddScoped<
+    IJwtTokenService,
+    JwtTokenService>();
 
-var jwtKey = builder.Configuration["Jwt:Key"]
-    ?? throw new InvalidOperationException("JWT Key bulunamadı.");
+string jwtKey =
+    builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException(
+        "JWT Key bulunamadı.");
 
-var jwtIssuer = builder.Configuration["Jwt:Issuer"]
-    ?? throw new InvalidOperationException("JWT Issuer bulunamadı.");
+string jwtIssuer =
+    builder.Configuration["Jwt:Issuer"]
+    ?? throw new InvalidOperationException(
+        "JWT Issuer bulunamadı.");
 
-var jwtAudience = builder.Configuration["Jwt:Audience"]
-    ?? throw new InvalidOperationException("JWT Audience bulunamadı.");
+string jwtAudience =
+    builder.Configuration["Jwt:Audience"]
+    ?? throw new InvalidOperationException(
+        "JWT Audience bulunamadı.");
 
 builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddAuthentication(
+        JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters =
@@ -93,51 +122,62 @@ builder.Services
                 ValidateIssuer = true,
                 ValidateAudience = true,
                 ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
 
-                ValidIssuer = jwtIssuer,
-                ValidAudience = jwtAudience,
+                ValidateIssuerSigningKey =
+                    true,
+
+                ValidIssuer =
+                    jwtIssuer,
+
+                ValidAudience =
+                    jwtAudience,
 
                 IssuerSigningKey =
                     new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(jwtKey)),
+                        Encoding.UTF8.GetBytes(
+                            jwtKey)),
 
-                ClockSkew = TimeSpan.Zero
+                ClockSkew =
+                    TimeSpan.Zero
             };
     });
 
 builder.Services.AddAuthorization();
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("Frontend", policy =>
-    {
-        policy
-            .WithOrigins("http://localhost:4200")
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
+    options.AddPolicy(
+        "Frontend",
+        policy =>
+        {
+            policy
+                .WithOrigins(
+                    "http://localhost:4200")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
 });
 
-builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+// Eski AI SQL arama servisleri
 
-builder.Services.AddTransient(
-    typeof(IPipelineBehavior<,>),
-    typeof(ValidationBehavior<,>));
 builder.Services.AddHttpClient<
     IAiSqlGenerator,
     OllamaAiSqlGenerator>();
-builder.Services.AddHttpClient<
-    IAiProductFilterInterpreter,
-    OllamaAiProductFilterInterpreter>();
-builder.Services.AddScoped<
-    IAiProductSearchTool,
-    EfProductSearchTool>();
+
 builder.Services.AddScoped<
     ISqlSecurityService,
     SqlSecurityService>();
+
 builder.Services.AddScoped<
     ISqlQueryExecutor,
     SqlQueryExecutor>();
+
+// Filtre tabanlı ürün arama servisleri
+
+builder.Services.AddHttpClient<
+    IAiProductFilterInterpreter,
+    OllamaAiProductFilterInterpreter>();
+
 builder.Services.AddScoped<
     IAiProductSearchTool,
     EfProductSearchTool>();
@@ -145,12 +185,17 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<
     IAiProductDetailsTool,
     EfProductDetailsTool>();
+
+// Bia agent servisleri
+
 builder.Services.AddHttpClient<
     IBiaActionPlanner,
     OllamaBiaActionPlanner>();
+
 builder.Services.AddScoped<
     IBiaAgentOrchestrator,
     BiaAgentOrchestrator>();
+
 builder.Services.AddMemoryCache();
 
 builder.Services.AddSingleton<
@@ -158,8 +203,14 @@ builder.Services.AddSingleton<
     InMemoryBiaConversationMemory>();
 
 builder.Services.AddScoped<
+    IBiaPlanProductResolver,
+    BiaPlanProductResolver>();
+
+builder.Services.AddScoped<
     IBiaCartTool,
     MediatRBiaCartTool>();
+
+// Bia action handler kayıtları
 
 builder.Services.AddScoped<
     IBiaAgentActionHandler,
@@ -176,10 +227,6 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<
     IBiaAgentActionHandler,
     GetPreviousProductDetailsActionHandler>();
-    
-builder.Services.AddScoped<
-    IBiaPlanProductResolver,
-    BiaPlanProductResolver>();
 
 builder.Services.AddScoped<
     IBiaAgentActionHandler,
@@ -193,31 +240,38 @@ builder.Services.AddScoped<
     IBiaAgentActionHandler,
     ConfirmPendingActionHandler>();
 
+var app =
+    builder.Build();
 
-var app = builder.Build();
-    using (var scope = app.Services.CreateScope())
-    {
-        var context = scope.ServiceProvider
-            .GetRequiredService<ApplicationDbContext>();
+using (var scope =
+       app.Services.CreateScope())
+{
+    var context =
+        scope.ServiceProvider
+            .GetRequiredService<
+                ApplicationDbContext>();
 
-        await context.Database.MigrateAsync();
-        await DatabaseSeeder.SeedAsync(context);
-    }
+    await context.Database.MigrateAsync();
 
-    app.UseMiddleware<ExceptionHandlingMiddleware>();
+    await DatabaseSeeder.SeedAsync(
+        context);
+}
 
-    if (app.Environment.IsDevelopment())
-    {
-        app.UseSwagger();
-        app.UseSwaggerUI();
-    }
+app.UseMiddleware<
+    ExceptionHandlingMiddleware>();
 
-    app.UseHttpsRedirection();
-    app.UseCors("Frontend");
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
-    app.UseAuthentication();
-    app.UseAuthorization();
+app.UseHttpsRedirection();
+app.UseCors("Frontend");
 
-    app.MapControllers();
+app.UseAuthentication();
+app.UseAuthorization();
 
-    app.Run();
+app.MapControllers();
+
+app.Run();

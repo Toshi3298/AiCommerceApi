@@ -153,4 +153,4 @@ public class GetAdminProductsQueryHandler
                 (double)request.PageSize)
         };
     }
-}
+}   

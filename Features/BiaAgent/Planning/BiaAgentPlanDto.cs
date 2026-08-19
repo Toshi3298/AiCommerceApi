@@ -14,4 +14,5 @@ public sealed class BiaAgentPlanDto
     public bool IsLast { get; init; }
 
     public int? Quantity { get; init; }
+    public bool UseCurrentProduct { get; init; }
 }

@@ -27,6 +27,17 @@ public sealed class BiaPlanProductResolver
         Guid conversationId,
         CancellationToken cancellationToken)
     {
+
+        if (plan.UseCurrentProduct &&
+                _conversationMemory.TryGetCurrentProductId(
+                    conversationId,
+                    out int currentProductId))
+            {
+                return await _productDetailsTool.GetByIdAsync(
+                    currentProductId,
+                    cancellationToken);
+            }
+
         int? referencedProductId =
             ResolveReferencedProductId(
                 plan,

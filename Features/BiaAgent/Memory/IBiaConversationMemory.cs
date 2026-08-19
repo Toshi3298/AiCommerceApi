@@ -16,6 +16,14 @@ public interface IBiaConversationMemory
         Guid conversationId,
         BiaPendingAction pendingAction);
 
+    void SaveCurrentProductId(
+    Guid conversationId,
+    int productId);
+
+    bool TryGetCurrentProductId(
+        Guid conversationId,
+        out int productId);
+
     bool TryGetPendingAction(
         Guid conversationId,
         out BiaPendingAction? pendingAction);

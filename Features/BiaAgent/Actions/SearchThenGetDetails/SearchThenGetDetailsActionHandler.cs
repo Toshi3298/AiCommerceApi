@@ -5,6 +5,7 @@ using AiCommerceApi.Features.BiaAgent.Planning;
 using AiCommerceApi.Features.BiaAgent.Tools;
 using AiCommerceApi.Services.Ai.Filters;
 using AiCommerceApi.Services.Ai.Tools;
+using AiCommerceApi.Features.BiaAgent.Memory;
 
 namespace AiCommerceApi.Features.BiaAgent.Actions
     .SearchThenGetDetails;
@@ -22,14 +23,19 @@ public sealed class
     private readonly IAiProductDetailsTool
         _productDetailsTool;
 
+    private readonly IBiaConversationMemory
+        _conversationMemory;
+
     public SearchThenGetDetailsActionHandler(
         IAiProductFilterInterpreter filterInterpreter,
         IAiProductSearchTool productSearchTool,
-        IAiProductDetailsTool productDetailsTool)
+        IAiProductDetailsTool productDetailsTool,
+        IBiaConversationMemory conversationMemory)
     {
         _filterInterpreter = filterInterpreter;
         _productSearchTool = productSearchTool;
         _productDetailsTool = productDetailsTool;
+         _conversationMemory = conversationMemory;
     }
 
     public string Action =>
@@ -110,8 +116,10 @@ public sealed class
                     "getirilemedi."
             };
         }
-
-        return new BiaChatResponseDto
+        _conversationMemory.SaveCurrentProductId(
+            context.ConversationId,
+            productDetails.Id);
+        return new BiaChatResponseDto   
         {
             Action = Action,
 

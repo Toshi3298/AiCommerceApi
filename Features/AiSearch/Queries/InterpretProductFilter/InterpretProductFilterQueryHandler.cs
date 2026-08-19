@@ -27,4 +27,4 @@ public sealed class InterpretProductFilterQueryHandler
             request.Prompt,
             cancellationToken);
     }
-}
+}   

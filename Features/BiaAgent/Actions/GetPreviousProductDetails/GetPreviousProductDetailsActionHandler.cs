@@ -99,6 +99,9 @@ public sealed class
                     "bulunamıyor."
             };
         }
+        _conversationMemory.SaveCurrentProductId(
+            context.ConversationId,
+            product.Id);
 
         return new BiaChatResponseDto
         {

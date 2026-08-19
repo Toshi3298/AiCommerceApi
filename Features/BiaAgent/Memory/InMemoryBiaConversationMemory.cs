@@ -55,6 +55,54 @@ public sealed class InMemoryBiaConversationMemory
             });
     }
 
+    public void SaveCurrentProductId(
+        Guid conversationId,
+        int productId)
+    {
+        if (conversationId == Guid.Empty ||
+            productId <= 0)
+        {
+            return;
+        }
+
+        _memoryCache.Set(
+            CreateCurrentProductCacheKey(
+                conversationId),
+            productId,
+            new MemoryCacheEntryOptions
+            {
+                SlidingExpiration =
+                    ConversationLifetime
+            });
+    }
+
+    public bool TryGetCurrentProductId(
+        Guid conversationId,
+        out int productId)
+    {
+        if (conversationId == Guid.Empty)
+        {
+            productId = 0;
+            return false;
+        }
+
+        bool found =
+            _memoryCache.TryGetValue(
+                CreateCurrentProductCacheKey(
+                    conversationId),
+                out int storedProductId);
+
+        if (!found || storedProductId <= 0)
+        {
+            productId = 0;
+            return false;
+        }
+
+        productId = storedProductId;
+        return true;
+    }
+
+
     public bool TryGetProductIds(
         Guid conversationId,
         out IReadOnlyList<int> productIds)
@@ -192,5 +240,12 @@ public sealed class InMemoryBiaConversationMemory
     {
         return
             $"bia-conversation:{conversationId}:pending";
+    }
+    private static string
+        CreateCurrentProductCacheKey(
+            Guid conversationId)
+    {
+        return
+            $"bia-conversation:{conversationId}:current-product";
     }
 }

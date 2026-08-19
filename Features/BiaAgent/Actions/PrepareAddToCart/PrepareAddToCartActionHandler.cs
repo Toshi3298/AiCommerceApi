@@ -4,6 +4,7 @@ using AiCommerceApi.Features.BiaAgent.Memory;
 using AiCommerceApi.Features.BiaAgent.PendingActions;
 using AiCommerceApi.Features.BiaAgent.Planning;
 using AiCommerceApi.Features.BiaAgent.Resolution;
+using AiCommerceApi.Features.BiaAgent.Actions;
 
 namespace AiCommerceApi.Features.BiaAgent.Actions.PrepareAddToCart;
 

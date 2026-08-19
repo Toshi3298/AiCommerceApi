@@ -195,6 +195,9 @@ public sealed class OllamaBiaActionPlanner
         bool isLast =
             plan.IsLast;
 
+        bool useCurrentProduct =
+            plan.UseCurrentProduct;
+
         int? quantity =
             plan.Quantity is > 0 and <= 99
                 ? plan.Quantity
@@ -206,6 +209,7 @@ public sealed class OllamaBiaActionPlanner
             {
                 referencePosition = null;
                 isLast = false;
+                useCurrentProduct = false;
                 quantity = null;
 
                 if (productId is null &&
@@ -222,6 +226,7 @@ public sealed class OllamaBiaActionPlanner
             {
                 productId = null;
                 productName = null;
+                useCurrentProduct = false;
                 quantity = null;
 
                 if (isLast)
@@ -241,7 +246,14 @@ public sealed class OllamaBiaActionPlanner
             {
                 quantity ??= 1;
 
-                if (isLast)
+                if (useCurrentProduct)
+                {
+                    productId = null;
+                    productName = null;
+                    referencePosition = null;
+                    isLast = false;
+                }
+                else if (isLast)
                 {
                     referencePosition = null;
                     productId = null;
@@ -260,7 +272,9 @@ public sealed class OllamaBiaActionPlanner
                 {
                     action =
                         BiaAgentActions.Unsupported;
+
                     quantity = null;
+                    useCurrentProduct = false;
                 }
 
                 break;
@@ -273,6 +287,7 @@ public sealed class OllamaBiaActionPlanner
                 productName = null;
                 referencePosition = null;
                 isLast = false;
+                useCurrentProduct = false;
                 quantity = null;
                 break;
             }
@@ -283,6 +298,7 @@ public sealed class OllamaBiaActionPlanner
                 productName = null;
                 referencePosition = null;
                 isLast = false;
+                useCurrentProduct = false;
                 quantity = null;
                 break;
             }
@@ -295,6 +311,7 @@ public sealed class OllamaBiaActionPlanner
             ProductName = productName,
             ReferencePosition = referencePosition,
             IsLast = isLast,
+            UseCurrentProduct = useCurrentProduct,
             Quantity = quantity
         };
     }

@@ -96,17 +96,65 @@ Bu action için productId ve productName null olmalıdır.
 Kullanıcı belirli bir ürünü sepete eklemek istediğinde action
 değerini "prepare_add_to_cart" yap.
 
-Kullanıcı daha önce gösterilmiş listedeki bir ürünü belirtiyorsa:
+Kullanıcı daha önce detayları gösterilmiş mevcut ürüne
+bağlamsal bir ifadeyle gönderme yapıyorsa useCurrentProduct
+değerini true yap.
+
+Bağlamsal ifadelere örnekler:
+
+- “Bu ürünü sepete ekle”
+- “Bunu sepete ekle”  
+- “Bundan iki tane ekle”
+- “Az önce gösterdiğin ürünü ekle”
+- “Detaylarını gösterdiğin ürünü sepete ekle”
+- “Şu üründen üç tane ekle”
+
+useCurrentProduct true olduğunda:
+
+- productId null olmalıdır.
+- productName null olmalıdır.
+- referencePosition null olmalıdır.
+- isLast false olmalıdır.
+- quantity kullanıcının belirttiği miktar olmalıdır.
+- Kullanıcı miktar belirtmediyse quantity 1 olmalıdır.
+
+Kullanıcı daha önce gösterilmiş listedeki belirli bir sıradaki
+ürünü sepete eklemek istiyorsa:
 
 - referencePosition alanına 1’den başlayan sıra numarasını yaz.
-- Son ürünü istiyorsa isLast değerini true yap.
-- productId ve productName alanlarını null döndür.
+- useCurrentProduct false olmalıdır.
+- isLast false olmalıdır.
+- productId ve productName null olmalıdır.
 
-Kullanıcı açıkça bir ürün ID değeri belirtiyorsa productId
-alanına yaz.
+Kullanıcı daha önce gösterilmiş listedeki son ürünü sepete
+eklemek istiyorsa:
 
-Kullanıcı açıkça bir ürün adı belirtiyorsa productName
-alanına mümkün olduğunca yalnızca ürün adını yaz.
+- isLast true olmalıdır.
+- useCurrentProduct false olmalıdır.
+- referencePosition null olmalıdır.
+- productId ve productName null olmalıdır.
+
+“Son ürün” ile “bu ürün” aynı anlama gelmez:
+
+- “Son ürün” listedeki son sıradaki üründür ve isLast true olur.
+- “Bu ürün” en son detayları gösterilen üründür ve
+  useCurrentProduct true olur.
+
+Kullanıcı açıkça bir ürün ID değeri belirtiyorsa:
+
+- productId alanına ürün ID değerini yaz.
+- productName null olmalıdır.
+- referencePosition null olmalıdır.
+- isLast false olmalıdır.
+- useCurrentProduct false olmalıdır.
+
+Kullanıcı açıkça bir ürün adı belirtiyorsa:
+
+- productName alanına mümkün olduğunca yalnızca ürün adını yaz.
+- productId null olmalıdır.
+- referencePosition null olmalıdır.
+- isLast false olmalıdır.
+- useCurrentProduct false olmalıdır.
 
 Kullanıcının belirttiği miktarı quantity alanına yaz.
 
@@ -162,6 +210,7 @@ Bütün alanları her zaman döndür:
 - productName
 - referencePosition
 - isLast
+- useCurrentProduct
 - quantity
 
 ## Zorunlu çıktı kuralları
@@ -174,8 +223,57 @@ Bütün alanları her zaman döndür:
 - Açıklama yazma.
 - Markdown kod bloğu kullanma.
 - JSON dışında hiçbir metin döndürme.
+- useCurrentProduct kullanılmıyorsa false döndür.
 
 ## Örnekler
+
+Kullanıcı:
+
+Bu ürünü sepete ekle
+
+JSON:
+
+{
+  "action": "prepare_add_to_cart",
+  "productId": null,
+  "productName": null,
+  "referencePosition": null,
+  "isLast": false,
+  "useCurrentProduct": true,
+  "quantity": 1
+}
+
+Kullanıcı:
+
+Bundan iki tane sepete ekle
+
+JSON:
+
+{
+  "action": "prepare_add_to_cart",
+  "productId": null,
+  "productName": null,
+  "referencePosition": null,
+  "isLast": false,
+  "useCurrentProduct": true,
+  "quantity": 2
+}
+
+Kullanıcı:
+
+Az önce detaylarını gösterdiğin ürünü sepete ekle
+
+JSON:
+
+{
+  "action": "prepare_add_to_cart",
+  "productId": null,
+  "productName": null,
+  "referencePosition": null,
+  "isLast": false,
+  "useCurrentProduct": true,
+  "quantity": 1
+}
 
 Kullanıcı:
 
@@ -189,6 +287,7 @@ JSON:
   "productName": null,
   "referencePosition": null,
   "isLast": false,
+  "useCurrentProduct": false,
   "quantity": null
 }
 
@@ -204,6 +303,7 @@ JSON:
   "productName": "Samsung Galaxy A56",
   "referencePosition": null,
   "isLast": false,
+  "useCurrentProduct": false,
   "quantity": null
 }
 
@@ -219,6 +319,7 @@ JSON:
   "productName": null,
   "referencePosition": null,
   "isLast": false,
+  "useCurrentProduct": false,
   "quantity": null
 }
 
@@ -234,6 +335,7 @@ JSON:
   "productName": null,
   "referencePosition": 2,
   "isLast": false,
+  "useCurrentProduct": false,
   "quantity": null
 }
 
@@ -249,6 +351,7 @@ JSON:
   "productName": null,
   "referencePosition": null,
   "isLast": true,
+  "useCurrentProduct": false,
   "quantity": null
 }
 
@@ -264,6 +367,7 @@ JSON:
   "productName": null,
   "referencePosition": null,
   "isLast": false,
+  "useCurrentProduct": false,
   "quantity": null
 }
 
@@ -279,7 +383,24 @@ JSON:
   "productName": null,
   "referencePosition": 2,
   "isLast": false,
+  "useCurrentProduct": false,
   "quantity": 2
+}
+
+Kullanıcı:
+
+Son ürünü sepete ekle
+
+JSON:
+
+{
+  "action": "prepare_add_to_cart",
+  "productId": null,
+  "productName": null,
+  "referencePosition": null,
+  "isLast": true,
+  "useCurrentProduct": false,
+  "quantity": 1
 }
 
 Kullanıcı:
@@ -294,7 +415,24 @@ JSON:
   "productName": "Samsung Galaxy A56",
   "referencePosition": null,
   "isLast": false,
+  "useCurrentProduct": false,
   "quantity": 1
+}
+
+Kullanıcı:
+
+2 numaralı üründen üç tane sepete ekle
+
+JSON:
+
+{
+  "action": "prepare_add_to_cart",
+  "productId": 2,
+  "productName": null,
+  "referencePosition": null,
+  "isLast": false,
+  "useCurrentProduct": false,
+  "quantity": 3
 }
 
 Kullanıcı:
@@ -309,6 +447,7 @@ JSON:
   "productName": null,
   "referencePosition": null,
   "isLast": false,
+  "useCurrentProduct": false,
   "quantity": null
 }
 
@@ -324,5 +463,6 @@ JSON:
   "productName": null,
   "referencePosition": null,
   "isLast": false,
+  "useCurrentProduct": false,
   "quantity": null
 }
